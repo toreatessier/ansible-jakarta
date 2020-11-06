@@ -1,0 +1,94 @@
+---
+- name: Create Jakarta's Tomcat VM 1
+  hosts: jakarta_pc1
+  remote_user: etudiant
+  tasks:
+  - include_role:
+      name: vm_creation
+      tasks_from: install
+    vars:
+      vm_ip: "{{ tomcat_1_ip }}"
+      vm_name: tomcat1
+      vm_memory: 4096
+
+- name: Create Jakarta's Tomcat VM 2
+  hosts: jakarta_pc2
+  remote_user: etudiant
+  tasks:
+  - include_role:
+      name: vm_creation
+      tasks_from: install
+    vars:
+      vm_ip: "{{ tomcat_2_ip }}"
+      vm_name: tomcat2
+      vm_memory: 4096
+
+- name: Create Jakarta's Tomcat VM 3
+  hosts: jakarta_pc3
+  remote_user: etudiant
+  tasks:
+  - include_role:
+      name: vm_creation
+      tasks_from: install
+    vars:
+      vm_ip: "{{ tomcat_3_ip }}"
+      vm_name: tomcat3
+      vm_memory: 4096
+
+- name: Create Jakarta's Tomcat VM 4
+  hosts: jakarta_pc4
+  remote_user: etudiant
+  tasks:
+  - include_role:
+      name: vm_creation
+      tasks_from: install
+    vars:
+      vm_ip: "{{ tomcat_4_ip }}"
+      vm_name: tomcat4
+      vm_memory: 4096
+
+- name: Create Jakarta's Tomcat VM 5 
+  hosts: jakarta_pc5
+  remote_user: etudiant
+  tasks:
+  - include_role:
+      name: vm_creation
+      tasks_from: install
+    vars:
+      vm_ip: "{{ tomcat_5_ip }}"
+      vm_name: tomcat5
+      vm_memory: 4096
+
+- name: Deploy Jakarta's Tomcat
+  hosts: jakarta_tomcat
+  remote_user: ansible
+  become: true
+  tasks:
+  - import_role:
+      name: tomcat
+      tasks_from: install
+
+- name: Update haproxy.cfg on load balancer machine
+  hosts: jakarta_load_balancer
+  remote_user: ansible
+  become: true
+  tasks:
+  - lineinfile:
+      dest: /etc/haproxy/haproxy.cfg
+      insertafter: "^#tomcat_ips_here"
+      line: "{{ item }}"
+    with_items:
+      - "\tserver node1 {{ tomcat_1_ip }}:8080 check"
+      - "\tserver node2 {{ tomcat_2_ip }}:8080 check"
+      - "\tserver node3 {{ tomcat_3_ip }}:8080 check"
+      - "\tserver node4 {{ tomcat_4_ip }}:8080 check"
+      - "\tserver node5 {{ tomcat_5_ip }}:8080 check"
+
+- name: Restart HAProxy
+  hosts: jakarta_load_balancer
+  remote_user: ansible
+  become: true
+  tasks:
+  - systemd:
+      name: haproxy
+      state: restarted

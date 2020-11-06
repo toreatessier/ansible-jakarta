@@ -1,0 +1,103 @@
+---
+- name: Create Jakarta's moodle VM 1
+  hosts: jakarta_pc1
+  remote_user: etudiant
+  tasks:
+  - include_role:
+      name: vm_creation
+      tasks_from: install
+    vars:
+      vm_ip: "{{ moodle_1_ip }}"
+      vm_name: moodle1
+      vm_memory: 1024
+
+- name: Create Jakarta's moodle VM 2
+  hosts: jakarta_pc2
+  remote_user: etudiant
+  tasks:
+  - include_role:
+      name: vm_creation
+      tasks_from: install
+    vars:
+      vm_ip: "{{ moodle_2_ip }}"
+      vm_name: moodle2
+      vm_memory: 1024
+
+- name: Create Jakarta's moodle VM 3
+  hosts: jakarta_pc3
+  remote_user: etudiant
+  tasks:
+  - include_role:
+      name: vm_creation
+      tasks_from: install
+    vars:
+      vm_ip: "{{ moodle_3_ip }}"
+      vm_name: moodle3
+      vm_memory: 1024
+
+- name: Create Jakarta's moodle VM 4
+  hosts: jakarta_pc4
+  remote_user: etudiant
+  tasks:
+  - include_role:
+      name: vm_creation
+      tasks_from: install
+    vars:
+      vm_ip: "{{ moodle_4_ip }}"
+      vm_name: moodle4
+      vm_memory: 1024
+
+- name: Create Jakarta's moodle VM 5 
+  hosts: jakarta_pc5
+  remote_user: etudiant
+  tasks:
+  - include_role:
+      name: vm_creation
+      tasks_from: install
+    vars:
+      vm_ip: "{{ moodle_5_ip }}"
+      vm_name: moodle5
+      vm_memory: 1024
+
+- name: Deploy moodle DB tables
+  hosts: moodle_db
+  remote_user: ansible
+  become: true
+  tasks:
+  - import_role:
+      name: moodle_database
+      tasks_from: install
+
+- name: Deploy Jakarta's moodle
+  hosts: jakarta_moodle
+  remote_user: ansible
+  become: true
+  tasks:
+  - import_role:
+      name: moodle
+      tasks_from: install
+
+- name: Update haproxy.cfg on load balancer machines
+  hosts: jakarta_load_balancer
+  remote_user: ansible
+  become: true
+  tasks:
+  - lineinfile:
+      dest: /etc/haproxy/haproxy.cfg
+      insertafter: "^#moodle_ips_here"
+      line: "{{ item }}"
+    with_items:
+      - "\tserver node1 {{ moodle_1_ip }}:{{ moodle_port_in }} check"
+      - "\tserver node2 {{ moodle_2_ip }}:{{ moodle_port_in }} check"
+      - "\tserver node3 {{ moodle_3_ip }}:{{ moodle_port_in }} check"
+      - "\tserver node4 {{ moodle_4_ip }}:{{ moodle_port_in }} check"
+      - "\tserver node5 {{ moodle_5_ip }}:{{ moodle_port_in }} check"
+
+- name: Restart HAProxy
+  hosts: jakarta_load_balancer
+  remote_user: ansible
+  become: true
+  tasks:
+  - systemd:
+      name: haproxy
+      state: restarted

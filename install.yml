@@ -1,0 +1,99 @@
+---
+- name: Deploy network configuration for Jakarta
+  hosts: jakarta_network
+  remote_user: ansible
+  become: true
+  tasks:
+  - import_role:
+      name: network_configuration
+      tasks_from: install
+
+- name: Deploy Jakarta's DB Galera Custer
+  hosts: jakarta_db
+  remote_user: ansible
+  become: true
+  tasks:
+  - import_role:
+      name: galera_cluster
+      tasks_from: install
+
+- name: Deploy HAProxy load balancer Cluster for Jakarta
+  hosts: jakarta_load_balancer
+  remote_user: ansible
+  become: true
+  tasks:
+  - import_role:
+      name: load_balancer
+      tasks_from: install
+
+- name: Deploy Zabbix for Jakarta
+  hosts: jakarta_zabbix
+  remote_user: ansible
+  become: true
+  tasks:
+  - import_role:
+      name: zabbix
+      tasks_from: install
+
+- name: Deploy UFW for Jakarta
+  hosts: jakarta_firewall
+  remote_user: ansible
+  become: true
+  tasks:
+  - import_role:
+      name: ufw
+      tasks_from: install
+
+- name: Deploy Rudder for Jakarta
+  hosts: jakarta_rudder
+  remote_user: ansible
+  become: true
+  tasks:
+  - import_role:
+      name: rudder
+      tasks_from: install
+
+- name: Deploy EyesOfApplication for Jakarta
+  hosts: jakarta_eoa
+  remote_user: ansible
+  become: true
+  tasks:
+  - import_role:
+      name: eyesofapplication
+      tasks_from: install
+
+- name: Deploy backup servers for Jakarta
+  hosts: jakarta_backup_servers
+  remote_user: ansible
+  become: true
+  tasks:
+  - import_role:
+      name: backup_server
+      tasks_from: install
+
+- name: Deploy ElasticSearch for Jakarta
+  hosts: jakarta_elk
+  remote_user: ansible
+  become: true
+  tasks:
+  - import_role:
+      name: elasticsearch
+      tasks_from: main
+
+- name: Deploy Logstash for Jakarta
+  hosts: jakarta_elk
+  remote_user: ansible
+  become: true
+  tasks:
+  - import_role:
+      name: logstash
+      tasks_from: main
+
+- name: Deploy Kibana for Jakarta
+  hosts: jakarta_elk
+  remote_user: ansible
+  become: true
+  tasks:
+  - import_role:
+      name: kibana
+      tasks_from: main

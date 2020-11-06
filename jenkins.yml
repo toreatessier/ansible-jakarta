@@ -1,0 +1,103 @@
+---
+- name: Create Jakarta's Jenkins VM 1
+  hosts: jakarta_pc1
+  remote_user: etudiant
+  tasks:
+  - include_role:
+      name: vm_creation
+      tasks_from: install
+    vars:
+      vm_ip: "{{ jenkins_1_ip }}"
+      vm_name: jenkins1
+      vm_memory: 4096
+
+- name: Create Jakarta's Jenkins VM 2
+  hosts: jakarta_pc2
+  remote_user: etudiant
+  tasks:
+  - include_role:
+      name: vm_creation
+      tasks_from: install
+    vars:
+      vm_ip: "{{ jenkins_2_ip }}"
+      vm_name: jenkins2
+      vm_memory: 4096
+
+- name: Create Jakarta's Jenkins VM 3
+  hosts: jakarta_pc3
+  remote_user: etudiant
+  tasks:
+  - include_role:
+      name: vm_creation
+      tasks_from: install
+    vars:
+      vm_ip: "{{ jenkins_3_ip }}"
+      vm_name: jenkins3
+      vm_memory: 4096
+
+- name: Create Jakarta's Jenkins VM 4
+  hosts: jakarta_pc4
+  remote_user: etudiant
+  tasks:
+  - include_role:
+      name: vm_creation
+      tasks_from: install
+    vars:
+      vm_ip: "{{ jenkins_4_ip }}"
+      vm_name: jenkins4
+      vm_memory: 4096
+
+- name: Create Jakarta's Jenkins VM 5
+  hosts: jakarta_pc5
+  remote_user: etudiant
+  tasks:
+  - include_role:
+      name: vm_creation
+      tasks_from: install
+    vars:
+      vm_ip: "{{ jenkins_5_ip }}"
+      vm_name: jenkins5
+      vm_memory: 4096
+
+- name: Deploy Java service
+  hosts: jakarta_jenkins
+  remote_user: ansible
+  become: true
+  tasks:
+  - import_role:
+      name: java
+      tasks_from: install
+
+- name: Deploy Jakarta's Jenkins
+  hosts: jakarta_jenkins
+  remote_user: ansible
+  become: true
+  tasks:
+  - import_role:
+      name: jenkins
+      tasks_from: install
+
+- name: Update haproxy.cfg on load balancer machine
+  hosts: jakarta_load_balancer
+  remote_user: ansible
+  become: true
+  tasks:
+  - lineinfile:
+      dest: /etc/haproxy/haproxy.cfg
+      insertafter: "^#jenkins_ips_here"
+      line: "{{ item }}"
+    with_items:
+      - "\tserver node1 {{ jenkins_1_ip }}:8080 check"
+      - "\tserver node2 {{ jenkins_2_ip }}:8080 check"
+      - "\tserver node3 {{ jenkins_3_ip }}:8080 check"
+      - "\tserver node4 {{ jenkins_4_ip }}:8080 check"
+      - "\tserver node5 {{ jenkins_5_ip }}:8080 check"
+
+- name: Restart HAProxy
+  hosts: jakarta_load_balancer
+  remote_user: ansible
+  become: true
+  tasks:
+  - systemd:
+      name: haproxy
+      state: restarted
